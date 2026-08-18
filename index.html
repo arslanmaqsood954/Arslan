@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEC//OPS — Security Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e13;
+    --panel: #10161d;
+    --panel-2: #171f28;
+    --border: rgba(255,255,255,0.08);
+    --text: #c9d1d9;
+    --text-dim: #6b7785;
+    --text-bright: #eef2f5;
+    --cyan: #4dd8c9;
+    --amber: #ffb454;
+    --red: #ff6b6b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--cyan); color:#00110f; }
+
+  /* background circuit texture */
+  .grid-tex{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+  }
+
+  a{ color:inherit; text-decoration:none; }
+
+  /* NAV */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 6vw;
+    backdrop-filter: blur(10px);
+    background:linear-gradient(to bottom, rgba(10,14,19,0.85), transparent);
+  }
+  .logo{ font-family:var(--mono); font-weight:800; letter-spacing:0.5px; font-size:15px; color:var(--text-bright); }
+  .logo span{ color:var(--cyan); }
+  nav ul{ list-style:none; display:flex; gap:36px; }
+  nav a{ font-family:var(--mono); font-size:12px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; transition:color .25s; position:relative; }
+  nav a:hover{ color:var(--cyan); }
+  nav a:focus-visible, a:focus-visible, button:focus-visible{ outline:2px solid var(--cyan); outline-offset:3px; }
+
+  /* HERO */
+  .hero{
+    position:relative; height:100vh; min-height:720px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:1;
+  }
+  #graph-canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  .hero-inner{
+    position:relative; z-index:2; text-align:center; padding:0 20px;
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:3px; color:var(--amber);
+    text-transform:uppercase; margin-bottom:22px; opacity:0;
+    animation: rise .8s ease forwards .2s;
+  }
+  .eyebrow::before{ content:"[ "; } .eyebrow::after{ content:" ]"; }
+  h1.headline{
+    font-family:var(--mono); font-weight:700; letter-spacing:-1px;
+    font-size:clamp(34px, 6vw, 76px); color:var(--text-bright); line-height:1.05;
+    opacity:0; animation: rise .8s ease forwards .4s;
+  }
+  h1.headline em{ font-style:normal; color:var(--cyan); }
+  .sub{
+    font-family:var(--sans); font-size:clamp(15px,1.6vw,19px); color:var(--text-dim);
+    max-width:560px; margin:26px auto 0; line-height:1.6;
+    opacity:0; animation: rise .8s ease forwards .6s;
+  }
+  .hero-cta{ margin-top:38px; display:flex; gap:16px; justify-content:center; pointer-events:auto;
+    opacity:0; animation: rise .8s ease forwards .8s; }
+  .btn{
+    font-family:var(--mono); font-size:13px; letter-spacing:0.5px; padding:13px 26px;
+    border-radius:2px; transition:all .25s; border:1px solid var(--border);
+  }
+  .btn-solid{ background:var(--cyan); color:#00171a; font-weight:700; border-color:var(--cyan); }
+  .btn-solid:hover{ background:#6fe7da; transform:translateY(-2px); }
+  .btn-ghost{ color:var(--text); }
+  .btn-ghost:hover{ border-color:var(--cyan); color:var(--cyan); }
+
+  @keyframes rise{ from{ opacity:0; transform:translateY(18px);} to{ opacity:1; transform:translateY(0);} }
+
+  .scroll-cue{
+    position:absolute; bottom:34px; left:50%; transform:translateX(-50%);
+    font-family:var(--mono); font-size:10px; color:var(--text-dim); letter-spacing:2px;
+    display:flex; flex-direction:column; align-items:center; gap:8px; z-index:2;
+  }
+  .scroll-cue .line{ width:1px; height:34px; background:linear-gradient(var(--cyan), transparent); animation:scrolldrop 1.8s infinite; }
+  @keyframes scrolldrop{ 0%{ opacity:0; transform:scaleY(0); transform-origin:top;} 40%{opacity:1; transform:scaleY(1); transform-origin:top;} 100%{opacity:0; transform:scaleY(1); transform-origin:bottom;} }
+
+  /* SECTIONS */
+  section{ position:relative; z-index:1; padding:120px 6vw; max-width:1280px; margin:0 auto; }
+  .section-head{ margin-bottom:56px; }
+  .section-num{ font-family:var(--mono); font-size:12px; color:var(--amber); letter-spacing:2px; margin-bottom:12px; }
+  .section-title{ font-family:var(--mono); font-size:clamp(26px,3.4vw,40px); color:var(--text-bright); font-weight:700; }
+  .section-desc{ color:var(--text-dim); max-width:520px; margin-top:14px; line-height:1.6; font-size:15px; }
+
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  /* SKILLS */
+  .skill-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:2px; background:var(--border); border:1px solid var(--border); }
+  .skill-cat{ background:var(--panel); padding:28px 26px; }
+  .skill-cat h3{ font-family:var(--mono); font-size:13px; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-family:var(--mono); font-size:11.5px; color:var(--text); border:1px solid var(--border); padding:6px 10px; border-radius:2px; background:var(--panel-2); }
+
+  /* PROJECTS */
+  .stage-key{ display:flex; flex-wrap:wrap; gap:10px 22px; margin-bottom:44px; font-family:var(--mono); font-size:11px; color:var(--text-dim); }
+  .stage-key b{ color:var(--amber); }
+  .proj-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:22px; }
+  .card{
+    background:var(--panel); border:1px solid var(--border); padding:30px 28px;
+    position:relative; overflow:hidden; transition:transform .3s, border-color .3s;
+  }
+  .card:hover{ transform:translateY(-4px); border-color:rgba(77,216,201,0.4); }
+  .card::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, var(--cyan), var(--amber));
+    transform:scaleX(0); transform-origin:left; transition:transform .35s;
+  }
+  .card:hover::before{ transform:scaleX(1); }
+  .card-stage{ font-family:var(--mono); font-size:10px; letter-spacing:1.5px; color:var(--amber); text-transform:uppercase; margin-bottom:14px; }
+  .card h3{ font-family:var(--mono); font-size:18px; color:var(--text-bright); margin-bottom:10px; line-height:1.3; }
+  .card p{ font-size:14px; color:var(--text-dim); line-height:1.65; margin-bottom:18px; }
+  .tool-row{ display:flex; flex-wrap:wrap; gap:7px; }
+  .tool{ font-family:var(--mono); font-size:10.5px; color:var(--cyan); border:1px solid rgba(77,216,201,0.25); padding:4px 9px; border-radius:2px; }
+
+  /* TRAINING LOG */
+  .log{ font-family:var(--mono); font-size:12.5px; border:1px solid var(--border); background:var(--panel); }
+  .log-row{ display:grid; grid-template-columns:110px 1fr; gap:18px; padding:11px 20px; border-bottom:1px solid var(--border); color:var(--text-dim); }
+  .log-row:last-child{ border-bottom:none; }
+  .log-row .tag{ color:var(--cyan); }
+  .log-row:hover{ background:var(--panel-2); color:var(--text); }
+
+  /* CONTACT */
+  .contact-wrap{ text-align:center; padding-top:60px; padding-bottom:100px; }
+  .contact-wrap .section-title{ font-size:clamp(30px,4.4vw,52px); }
+  .contact-links{ display:flex; gap:26px; justify-content:center; margin-top:36px; flex-wrap:wrap; }
+  .contact-links a{ font-family:var(--mono); font-size:13px; color:var(--text-dim); border-bottom:1px solid transparent; padding-bottom:4px; transition:.25s; }
+  .contact-links a:hover{ color:var(--cyan); border-color:var(--cyan); }
+
+  footer{ border-top:1px solid var(--border); padding:26px 6vw; display:flex; justify-content:space-between; font-family:var(--mono); font-size:11px; color:var(--text-dim); flex-wrap:wrap; gap:10px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+  @media (max-width:720px){
+    nav{ display:none; }
+    section{ padding:90px 6vw; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-tex"></div>
+
+<header>
+  <div class="logo">SEC<span>//</span>OPS</div>
+  <nav>
+    <ul>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#log">Training Log</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <canvas id="graph-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="eyebrow">Recon → Exploit → Detect → Remediate</div>
+    <h1 class="headline">I trace the <em>kill chain</em><br>so you don't have to live it.</h1>
+    <p class="sub">Cybersecurity practitioner specializing in web application penetration testing, cloud security (AWS), and incident response. This is a record of the labs, breaches, and rebuilds behind that.</p>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-solid">View Projects</a>
+      <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>SCROLL</span><span class="line"></span></div>
+</section>
+
+<section id="skills">
+  <div class="section-head reveal">
+    <div class="section-num">01 / Capability Map</div>
+    <h2 class="section-title">Skills &amp; Tooling</h2>
+    <p class="section-desc">What I use, by domain — from initial recon to post-incident cleanup.</p>
+  </div>
+  <div class="skill-grid reveal">
+    <div class="skill-cat">
+      <h3>Web App Security</h3>
+      <div class="chip-row">
+        <span class="chip">Burp Suite</span><span class="chip">Reflected XSS</span><span class="chip">DOM XSS</span>
+        <span class="chip">Broken Logic</span><span class="chip">JWT Attacks</span><span class="chip">SSRF</span>
+        <span class="chip">RCE</span><span class="chip">WordPress</span>
+      </div>
+    </div>
+    <div class="skill-cat">
+      <h3>Cloud Security — AWS</h3>
+      <div class="chip-row">
+        <span class="chip">IAM</span><span class="chip">Lambda</span><span class="chip">RDS</span>
+        <span class="chip">CloudFormation</span><span class="chip">GuardDuty</span><span class="chip">CloudTrail</span>
+        <span class="chip">Cloudgoat</span><span class="chip">PACU</span><span class="chip">Prowler</span>
+      </div>
+    </div>
+    <div class="skill-cat">
+      <h3>IR &amp; Forensics</h3>
+      <div class="chip-row">
+        <span class="chip">Velociraptor</span><span class="chip">Wazuh</span><span class="chip">Custom Detection Rules</span>
+        <span class="chip">Windows Defender Integration</span><span class="chip">Log Analysis</span><span class="chip">Case Investigation</span>
+      </div>
+    </div>
+    <div class="skill-cat">
+      <h3>Recon &amp; Bug Bounty</h3>
+      <div class="chip-row">
+        <span class="chip">Google Dorking</span><span class="chip">Recon-ng</span><span class="chip">Nuclei</span>
+        <span class="chip">Wayback URLs</span><span class="chip">HTTX</span><span class="chip">Report Writing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="section-head reveal">
+    <div class="section-num">02 / Case Studies</div>
+    <h2 class="section-title">Featured Projects</h2>
+    <p class="section-desc">Each card maps to a stage of the kill chain shown in the hero graph above.</p>
+  </div>
+
+  <div class="stage-key reveal">
+    <span><b>RECON</b> — target discovery</span>
+    <span><b>EXPLOIT</b> — initial access</span>
+    <span><b>PIVOT</b> — lateral movement</span>
+    <span><b>DETECT</b> — alerting &amp; triage</span>
+    <span><b>REMEDIATE</b> — fix &amp; harden</span>
+  </div>
+
+  <div class="proj-grid">
+    <div class="card reveal">
+      <div class="card-stage">Detect / Respond</div>
+      <h3>Digital Forensics — Case Becky &amp; Case Brutus</h3>
+      <p>Full-scope forensic investigations reconstructing attacker timelines from disk and memory artifacts, culminating in a written incident report with root cause and recommendations.</p>
+      <div class="tool-row"><span class="tool">Velociraptor</span><span class="tool">Wazuh</span><span class="tool">Linux</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Detect</div>
+      <h3>SIEM Deployment &amp; Detection Engineering</h3>
+      <p>Deployed Wazuh from scratch, built custom roles and detection rules, and integrated Windows Defender telemetry to close visibility gaps on endpoints.</p>
+      <div class="tool-row"><span class="tool">Wazuh</span><span class="tool">Windows Defender</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Exploit / Pivot</div>
+      <h3>AWS Attack Simulation — Cloudgoat Scenarios 1–3</h3>
+      <p>Chained IAM misconfigurations, Lambda abuse, and privilege escalation paths across three Cloudgoat scenarios, then documented each attack path and its fix.</p>
+      <div class="tool-row"><span class="tool">Cloudgoat</span><span class="tool">PACU</span><span class="tool">AWS IAM</span><span class="tool">Lambda</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Remediate</div>
+      <h3>Cloud Security Posture Assessment</h3>
+      <p>Ran a full posture assessment against a live AWS environment, ranked findings by risk, and delivered a remediation plan an engineering team could actually action.</p>
+      <div class="tool-row"><span class="tool">Prowler</span><span class="tool">AWS</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Exploit</div>
+      <h3>Web Application Penetration Test</h3>
+      <p>Manual testing against a live web target uncovering reflected and DOM-based XSS, broken business logic, JWT tampering, SSRF, and a working RCE chain.</p>
+      <div class="tool-row"><span class="tool">Burp Suite</span><span class="tool">WordPress</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Recon</div>
+      <h3>Bug Bounty Recon Pipeline</h3>
+      <p>Built a repeatable recon workflow — dorking, subdomain and endpoint discovery, historical URL mining, and live host probing — feeding directly into vulnerability triage.</p>
+      <div class="tool-row"><span class="tool">Recon-ng</span><span class="tool">Nuclei</span><span class="tool">HTTX</span><span class="tool">Wayback</span></div>
+    </div>
+
+    <div class="card reveal">
+      <div class="card-stage">Detect / Respond</div>
+      <h3>Cloud Incident Response — GuardDuty + CloudTrail</h3>
+      <p>Simulated an active AWS compromise, detected it via GuardDuty findings, then reconstructed the full attacker timeline from CloudTrail logs for the after-action report.</p>
+      <div class="tool-row"><span class="tool">GuardDuty</span><span class="tool">CloudTrail</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="log">
+  <div class="section-head reveal">
+    <div class="section-num">03 / Training Log</div>
+    <h2 class="section-title">Bootcamp Coverage</h2>
+    <p class="section-desc">A running log of the curriculum this portfolio is built on.</p>
+  </div>
+  <div class="log reveal">
+    <div class="log-row"><span class="tag">MODULE</span><span>Introduction to Cybersecurity &amp; Linux Platform</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Web App Hacking I &amp; II — WordPress, Burp Suite</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>IR &amp; Forensics with Velociraptor</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Wazuh — Setup, Custom Roles, Windows Defender Integration</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Forensic Case Work — Becky, Brutus</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Recon-ng, Google Dorking</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Intro to Cloud Security — AWS IAM, Lambda, SSRF, CloudFormation, RDS</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Cloudgoat + PACU — Scenarios 1–3</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>AWS Incident Handling — GuardDuty + CloudTrail</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Vulnerability Classes — JWT, Logic Flaws, RCE, Reflected/DOM XSS</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Bug Bounty — Wayback URLs, HTTX, Report Writing</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Cloud Security Posture Assessment with Prowler</span></div>
+    <div class="log-row"><span class="tag">MODULE</span><span>Mock Interviews &amp; LinkedIn Profile Optimization</span></div>
+  </div>
+</section>
+
+<section id="contact" class="contact-wrap">
+  <div class="section-num reveal">04 / Get In Touch</div>
+  <h2 class="section-title reveal">Let's talk security.</h2>
+  <p class="section-desc reveal" style="margin-left:auto;margin-right:auto;">Open to pentesting, SOC, and cloud security roles. Reach out below.</p>
+  <div class="contact-links reveal">
+    <a href="mailto:you@example.com">you@example.com</a>
+    <a href="#">github.com/yourhandle</a>
+    <a href="#">linkedin.com/in/yourhandle</a>
+    <a href="#">Download Résumé</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 — Built from the bootcamp kill chain up.</span>
+  <span>SEC//OPS</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // ---- Scroll reveal ----
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); } });
+  }, { threshold:0.15 });
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // ---- 3D kill-chain graph ----
+  const canvas = document.getElementById('graph-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0.4, 9);
+
+  function resize(){
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const stageNames = ['RECON','EXPLOIT','PERSIST','PIVOT','DETECT','EXFIL','REMEDIATE'];
+  const nodeCount = stageNames.length;
+  const radius = 3.6;
+  const nodes = [];
+  const cyan = new THREE.Color(0x4dd8c9);
+  const amber = new THREE.Color(0xffb454);
+
+  for(let i=0;i<nodeCount;i++){
+    const angle = (i/nodeCount) * Math.PI * 2;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle * 1.3) * 1.1;
+    const z = Math.sin(angle) * radius * 0.5;
+
+    const geo = new THREE.SphereGeometry(0.11, 24, 24);
+    const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? cyan : amber });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x,y,z);
+    group.add(mesh);
+
+    const glowGeo = new THREE.SphereGeometry(0.24, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? cyan : amber, transparent:true, opacity:0.15 });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    glow.position.copy(mesh.position);
+    group.add(glow);
+
+    nodes.push(mesh.position);
+  }
+
+  // connecting lines (sequential kill chain path)
+  const linePoints = [...nodes, nodes[0]];
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
+  const lineMat = new THREE.LineBasicMaterial({ color:0x2a3540, transparent:true, opacity:0.6 });
+  const line = new THREE.Line(lineGeo, lineMat);
+  group.add(line);
+
+  // traveling particles along each segment
+  const particles = [];
+  for(let i=0;i<nodeCount;i++){
+    const geo = new THREE.SphereGeometry(0.045, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({ color:0xffffff });
+    const p = new THREE.Mesh(geo, mat);
+    scene.add(p);
+    particles.push({ mesh:p, from:i, to:(i+1)%nodeCount, t: i/nodeCount, speed: 0.15 + Math.random()*0.08 });
+    group.add(p);
+  }
+
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e)=>{
+    mouseX = (e.clientX / window.innerWidth - 0.5);
+    mouseY = (e.clientY / window.innerHeight - 0.5);
+  });
+
+  const clock = new THREE.Clock();
+  function animate(){
+    const dt = clock.getDelta();
+    const t = clock.getElapsedTime();
+
+    group.rotation.y = t * 0.12 + mouseX * 0.4;
+    group.rotation.x = mouseY * 0.2;
+
+    particles.forEach(p=>{
+      p.t += dt * p.speed;
+      if(p.t > 1){ p.t = 0; }
+      const a = nodes[p.from], b = nodes[p.to];
+      p.mesh.position.lerpVectors(a, b, p.t);
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+
+</body>
+</html>
